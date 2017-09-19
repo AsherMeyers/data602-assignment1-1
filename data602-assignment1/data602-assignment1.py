@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 """
 Created on Sat Sep 16 17:25:16 2017
 
@@ -14,8 +15,6 @@ No global variables are used except for equities, all others are local.
 
 #  The following code imports packages and sets the ledger to an empty list and provides an
 #  equities list.
-
-
 import datetime
 from bs4 import BeautifulSoup
 import urllib
@@ -23,6 +22,10 @@ import pandas as ps
 import numpy as np
 equities = ['SNAP', 'AAPL', 'AMZN', 'MSFT', 'INTC']
 ledger = []
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
 
 # The following section defines the main screen
 # This part of the code, calls the main functions to Trade, Blotter, P/L and Exit.
@@ -262,23 +265,5 @@ def show_pl(table):
 #mainroutine
 mainscreen()
 
-'''
-done = False
-while not done:
-    mainscreen()
-    option = int(input())
-    if option==4:
-        done=True
-        print('Thank you for trading with us!')
-    if option>4:
-        print('Incorrect Option, please select from 1 to 4')
-    if option==1:
-        letstrade = trade()
-        done=True
-    if option==2:
-        show_blotter()
-        done=True
-    if option==3:
-        show_pl()
-        done=True
-'''
+if __name__ == "__main__":
+    app.run(host='0.0.0.0') #host 0.0.0.0 needed for docker
