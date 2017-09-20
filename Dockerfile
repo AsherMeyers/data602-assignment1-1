@@ -6,7 +6,8 @@ RUN apt-get update -qq && apt-get upgrade -y && \
         python-pip
 RUN pip install --no-cache-dir pandas && \
     pip install bs4 && \
-    pip install numpy
+    pip install numpy && \
+    pip install lxml
 
 WORKDIR /usr/src/app
 
