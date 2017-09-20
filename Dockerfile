@@ -1,10 +1,12 @@
 FROM python:alpine
 
-RUN apk update && apk upgrade && \
-    apk add --no-cache git && \
-    pip install --no-cache-dir pandas && \
-    pip install bs4 && \
-    pip install numpy
+RUN apk add --no-cache --virtual=build_dependencies musl-dev gcc python-dev make cmake g++ gfortran && \
+    ln -s /usr/include/locale.h /usr/include/xlocale.h && \
+    pip install numpy && \
+    pip install pandas==0.18.1 && \
+    apk del build_dependencies && \
+    apk add --no-cache libstdc++ && \
+    rm -rf /var/cache/apk/*
 
 WORKDIR /usr/src/app
 
