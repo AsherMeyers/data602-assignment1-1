@@ -4,6 +4,9 @@ RUN apt-get update -qq && apt-get upgrade -y && \
    apt-get install -y --no-install-recommends \
        libatlas-base-dev gfortran\
         python-pip
+RUN pip install --no-cache-dir pandas && \
+    pip install bs4 && \
+    pip install numpy
 
 WORKDIR /usr/src/app
 
