@@ -7,6 +7,6 @@ WORKDIR /usr/src/app
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-RUN git clone https://github.com/cspitmit03/CUNYDATA602/tree/master/data602-assignment1 /usr/src/app/flask-trader
+RUN git clone https://github.com/cspitmit03/CUNYDATA602 /usr/src/app/flask-trader
 EXPOSE 5000
 CMD [ "python", "/usr/src/app/flask-trader/data602-assignment1.py" ]
