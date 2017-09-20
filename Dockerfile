@@ -1,16 +1,9 @@
-FROM python:alpine
+FROM python:3.5
 
-RUN apk add --no-cache --virtual=build_dependencies musl-dev gcc python-dev make cmake g++ gfortran && \
-    ln -s /usr/include/locale.h /usr/include/xlocale.h && \
-    pip install wheel && \
-    pip wheel numpy && \
-    pip install numpy && \
-    pip wheel pandas && \
-    pip install pandas && \
-    pip install bs4 && \
-    apk del build_dependencies && \
-    apk add --no-cache libstdc++ && \
-    rm -rf /var/cache/apk/*
+RUN apt-get update -qq && apt-get upgrade -y && \
+   apt-get install -y --no-install-recommends \
+       libatlas-base-dev gfortran\
+        python-pip
 
 WORKDIR /usr/src/app
 
