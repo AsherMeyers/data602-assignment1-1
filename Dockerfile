@@ -1,10 +1,10 @@
 FROM python:alpine
 
 RUN apk update && apk upgrade && \
-    apk add --no-cache git
-RUN pip install bs4
-RUN pip install pandas
-RUN pip install numpy
+    apk add --no-cache git && \
+    pip install --no-cache-dir pandas && \
+    pip install bs4 && \
+    pip install numpy
 
 WORKDIR /usr/src/app
 
