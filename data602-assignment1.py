@@ -15,6 +15,8 @@ No global variables are used except for equities, all others are local.
 
 #  The following code imports packages and sets the ledger to an empty list and provides an
 #  equities list.
+import os
+Import socket
 import datetime
 from bs4 import BeautifulSoup
 import urllib
@@ -23,6 +25,7 @@ import numpy as np
 equities = ['SNAP', 'AAPL', 'AMZN', 'MSFT', 'INTC']
 ledger = []
 from flask import Flask
+
 app = Flask(__name__)
 
 @app.route('/')
