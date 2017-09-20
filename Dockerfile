@@ -1,15 +1,8 @@
 FROM python:alpine
 
 RUN apk update && apk upgrade && \
-    apk add --no-cache git &&
-
-# install Python and pip package manager
-RUN apt-get install -y python \
-                       python-dev \
-                       python-distribute \
-                       python-pip
-
-RUN pip install --no-cache-dir pandas && \
+    apk add --no-cache git && \
+    pip install --no-cache-dir pandas && \
     pip install bs4 && \
     pip install numpy
 
