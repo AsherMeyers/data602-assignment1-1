@@ -82,7 +82,7 @@ def trade(table):
         if table == []:
             print('No transactions: \n')
         elif table != [] and stockavail(table,eq)>=shares:
-            entry = sell(value,shares,eq)
+            entry = sell(table, value,shares,eq)
             return entry
         else:
             print('Not enough stocks available to sell: \n')
@@ -97,10 +97,10 @@ def trade(table):
         shares = int(input('How many shares? '))
         eq = value-1
         if table == []:
-            entry = buy(value,shares,eq)
+            entry = buy(table, value,shares,eq)
             return entry
         elif table != [] and buy(value,shares,eq)[5]>=cashavail(table):
-            entry = buy(value,shares,eq)
+            entry = buy(table, value,shares,eq)
             return entry
         elif table != [] and cashavail(table)<=0:
             print('Not enough money available to buy: ')
@@ -133,21 +133,21 @@ def cashavail(table):
     
     #import ledger as dataframe and calculate if cash available to buy
     x = ps.DataFrame(table)
-    x.columns = ['Side','Ticker','Qty','Price','Date','Cost']
+    x.columns = ['Side','Ticker','Qty','Price','Date','Cost','tWAP']
     newcash = cash + sum(x.Cost)
     return newcash
 
 def stockavail(table,eq):
     #check to see if stock is available to sell
     x = ps.DataFrame(table)
-    x.columns = ['Side','Ticker','Qty','Price','Date','Cost']
+    x.columns = ['Side','Ticker','Qty','Price','Date','Cost','tWAP']
     
     l = x[(x.Ticker == equities[eq])]
     stocks = sum(l.Qty)
     return stocks
 
 
-def sell(value, shares, eq):
+def sell(table, value, shares, eq):
     #call link and read page for current price
     '''
     a which is value is used to call the URL from linkcall list
@@ -166,12 +166,17 @@ def sell(value, shares, eq):
     # do math
     cost = instantprice * shares
     
+    if table == []:
+        WAP = instantprice
+    else:
+        y = pl(table)
+        WAP = y.WAP[eq]
     
-    newentry = ['sell', symb, shares, instantprice, time, cost] #list to store items related to trade    
+    newentry = ['sell', symb, shares, instantprice, time, cost, WAP] #list to store items related to trade    
     return newentry    
 
     
-def buy(value, shares, eq):
+def buy(table, value, shares, eq):
     #call link and read page for current price
     '''
     value which is the value is used to call the URL from linkcall list
@@ -189,8 +194,13 @@ def buy(value, shares, eq):
     
     # Calculate cost of stock purchase
     cost = instantprice * shares
-    
-    newentry = ['buy', symb, shares, instantprice, time, cost*-1] #list to store items related to trade
+    if table == []:
+        WAP = instantprice
+    else:
+        y = pl(table)
+        WAP = y.WAP[eq]
+
+    newentry = ['buy', symb, shares, instantprice, time, cost*-1, WAP] #list to store items related to trade
     return newentry
 
 
@@ -201,7 +211,8 @@ def show_blotter(table):
         print('No entries yet!\n')
     else:
         x = ps.DataFrame(table)
-        x.columns = ['Side','Ticker','Qty','Price','Date','Cost']
+        x.columns = ['Side','Ticker','Qty','Price','Date','Cost','WAP']
+        x.drop(['WAP'], axis = 1, inplace = True)
         print(ps.DataFrame(x),'\n')
     mainscreen()     
     return None
@@ -221,50 +232,59 @@ def pricesnow():
 
 
 #the following set of code shows the P/L
+
+def pl(table):
+    x = ps.DataFrame(table)
+    x.columns = ['Side','Ticker','Qty','Price','Date','Cost','tWAP']
+
+    y = ps.DataFrame(ps.np.empty((5,6)), columns = ['Ticker','Position','Market','WAP','UPL','RPL'])
+    y.Ticker = equities
+    instant = pricesnow()
+    y.Market = instant    
+    
+    # Calculate items for WAP
+    l = []
+    r = []
+    for i in range(0,5):
+        l = x[(x.Side == 'buy') & (x.Ticker == equities[i])]
+        r = x[(x.Ticker == equities[i])]
+        r.loc[r.Side == 'sell', 'Qty'] *= -1
+        if sum(l.Qty) == 0:
+            y.WAP[i] = 0
+            y.Position[i] = sum(r.Qty)
+        else:
+            l.Cost = l.Qty * l.Price
+            y.WAP[i] = sum(l.Cost)/sum(l.Qty)
+            y.Position[i] = sum(r.Qty)
+    
+    # Calculate items for UPL
+    for i in range(0,5):
+        if y.Position[i] > 0:
+            y.UPL[i] = (y.Market[i] - y.WAP[i])*y.Position[i]
+        else:
+            y.UPL[i] = 0
+        
+    #calculate RPL
+    for i in range(0,5):
+        r = x[(x.Side == 'sell') & (x.Ticker == equities[i])]
+        r['Profit'] = r.Qty*(r.Price-r.tWAP)
+        if sum(l.Qty) == 0:
+            y.RPL[i] = 0
+        else:
+            y.RPL[i] = sum(r.Profit)
+    return y
+
 def show_pl(table):
     if table == []:
         print('No P/L until you buy your first stock\n')
         mainscreen()
     else:
         cash = 1000000
-        
+        y=pl(table)
         #import ledger as dataframe
         x = ps.DataFrame(table)
-        x.columns = ['Side','Ticker','Qty','Price','Date','Cost']
+        x.columns = ['Side','Ticker','Qty','Price','Date','Cost','WAP']
         newcash = cash + sum(x.Cost)
-        #x.loc[x.Side == 'Sell', 'Qty'] *= -1
-        
-        y = ps.DataFrame(ps.np.empty((5,6)), columns = ['Ticker','Position','Market','WAP','UPL','RPL'])
-        y.Ticker = equities
-        instant = pricesnow()
-        y.Market = instant    
-        
-        # Calculate items for WAP
-        l = []
-        r = []
-        z = []
-        for i in range(0,5):
-            l = x[(x.Side == 'buy') & (x.Ticker == equities[i])]
-            r = x[(x.Ticker == equities[i])]
-            r.loc[r.Side == 'sell', 'Qty'] *= -1
-            if sum(l.Qty) == 0:
-                y.WAP[i] = 0
-                y.Position[i] = sum(r.Qty)
-            else:
-                l.Cost = l.Qty * l.Price
-                y.WAP[i] = sum(l.Cost)/sum(l.Qty)
-                y.Position[i] = sum(r.Qty)
-        
-        # Calculate items for UPL
-        for i in range(0,5):
-            if y.Position[i] > 0:
-                y.UPL[i] = (y.Market[i] - y.WAP[i])*y.Position[i]
-            else:
-                y.UPL[i] = 0
-        
-        #calculate RPL
-        for i in range(0,5):
-            y.RPL[i] = 0
         
         # Display items
         print('\n')
@@ -274,7 +294,7 @@ def show_pl(table):
         
         mainscreen()    
         #do math
-        return
+        return y
 
 
 #mainroutine
